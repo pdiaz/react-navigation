@@ -106,20 +106,18 @@ class Header extends React.PureComponent<void, HeaderProps, HeaderState> {
 
     // On iOS, width of left/right components depends on the calculated
     // size of the title.
-    const onLayoutIOS = Platform.OS === 'ios'
-      ? (e: LayoutEvent) => {
+    const onLayout = (e: LayoutEvent) => {
         this.setState({
           widths: {
             ...this.state.widths,
             [props.scene.key]: e.nativeEvent.layout.width,
           },
         });
-      }
-      : undefined;
+      };
 
     return (
       <HeaderTitle
-        onLayout={onLayoutIOS}
+        onLayout={onLayout}
         style={[color ? { color } : null, titleStyle]}
       >
         {titleString}
@@ -128,13 +126,13 @@ class Header extends React.PureComponent<void, HeaderProps, HeaderState> {
   };
 
   _renderLeftComponent = (props: SceneProps) => {
-    if (props.scene.index === 0) {
-      return null;
-    }
     const details = this.props.getScreenDetails(props.scene);
     const {headerLeft, headerPressColorAndroid} = details.options;
     if (headerLeft) {
       return headerLeft;
+    }
+    if (props.scene.index === 0) {
+      return null;
     }
     const backButtonTitle = this._getBackButtonTitleString(props.scene);
     const width = this.state.widths[props.scene.key]
@@ -168,15 +166,6 @@ class Header extends React.PureComponent<void, HeaderProps, HeaderState> {
 
   _renderTitle(props: SceneProps, options: *): ?React.Element<*> {
     const style = {};
-
-    if (Platform.OS === 'android') {
-      if (!options.hasLeftComponent) {
-        style.left = 0;
-      }
-      if (!options.hasRightComponent) {
-        style.right = 0;
-      }
-    }
 
     return this._renderSubView(
       { ...props, style },
@@ -331,9 +320,7 @@ const styles = StyleSheet.create({
     right: TITLE_OFFSET,
     top: 0,
     position: 'absolute',
-    alignItems: Platform.OS === 'android'
-      ? 'flex-start'
-      : 'center',
+    alignItems: 'center',
   },
   left: {
     left: 0,
