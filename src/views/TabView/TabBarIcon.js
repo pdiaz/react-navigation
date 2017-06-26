@@ -1,23 +1,16 @@
 /* @flow */
 
 import React, { PureComponent } from 'react';
-import {
-  Animated,
-  View,
-  StyleSheet,
-} from 'react-native';
+import { Animated, View, StyleSheet } from 'react-native';
 
 import type {
   NavigationAction,
   NavigationState,
   NavigationScreenProp,
-  NavigationRoute,
   Style,
 } from '../../TypeDefinition';
 
-import type {
-  TabScene,
-} from './TabView';
+import type { TabScene } from './TabView';
 
 type Props = {
   activeTintColor: string,

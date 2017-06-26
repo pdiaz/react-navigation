@@ -2,7 +2,7 @@
  * @flow
  */
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from '../utils/invariant';
 
 import getScreenForRouteName from './getScreenForRouteName';
 import addNavigationHelpers from '../addNavigationHelpers';
@@ -12,6 +12,7 @@ import type {
   NavigationScreenProp,
   NavigationAction,
   NavigationRoute,
+  NavigationStateRoute,
   NavigationRouteConfigMap,
   NavigationScreenConfig,
   NavigationScreenConfigProps,
@@ -20,7 +21,7 @@ import type {
 function applyConfig(
   configurer: ?NavigationScreenConfig<*>,
   navigationOptions: *,
-  configProps: NavigationScreenConfigProps,
+  configProps: NavigationScreenConfigProps
 ): * {
   if (typeof configurer === 'function') {
     return {
@@ -42,52 +43,61 @@ function applyConfig(
 
 export default (
   routeConfigs: NavigationRouteConfigMap,
-  navigatorScreenConfig?: NavigationScreenConfig<*>,
-) =>
-  (
-    navigation: NavigationScreenProp<NavigationRoute, NavigationAction>,
-    screenProps: *,
-  ) => {
-    const { state, dispatch } = navigation;
-    const route = state;
-    // $FlowFixMe
-    const { routes, index } = (route: NavigationStateRoute);
+  navigatorScreenConfig?: NavigationScreenConfig<*>
+) => (
+  navigation: NavigationScreenProp<NavigationRoute, NavigationAction>,
+  screenProps: *
+) => {
+  const { state, dispatch } = navigation;
+  const route = state;
+  // $FlowFixMe
+  const { routes, index } = (route: NavigationStateRoute);
 
+  invariant(
+    route.routeName && typeof route.routeName === 'string',
+    'Cannot get config because the route does not have a routeName.'
+  );
+
+  const Component = getScreenForRouteName(routeConfigs, route.routeName);
+
+  let outputConfig = {};
+
+  if (Component.router) {
     invariant(
-      route.routeName &&
-      typeof route.routeName === 'string',
-      'Cannot get config because the route does not have a routeName.',
+      route && routes && index != null,
+      `Expect nav state to have routes and index, ${JSON.stringify(route)}`
     );
+    const childRoute = routes[index];
+    const childNavigation = addNavigationHelpers({
+      state: childRoute,
+      dispatch,
+    });
+    outputConfig = Component.router.getScreenOptions(
+      childNavigation,
+      screenProps
+    );
+  }
 
-    const Component = getScreenForRouteName(routeConfigs, route.routeName);
+  const routeConfig = routeConfigs[route.routeName];
 
-    let outputConfig = {};
+  const routeScreenConfig = routeConfig.navigationOptions;
+  const componentScreenConfig = Component.navigationOptions;
 
-    if (Component.router) {
-      invariant(
-        route && routes && index != null,
-        `Expect nav state to have routes and index, ${JSON.stringify(route)}`
-      );
-      const childRoute = routes[index];
-      const childNavigation = addNavigationHelpers({
-        state: childRoute,
-        dispatch,
-      });
-      outputConfig = Component.router.getScreenOptions(childNavigation, screenProps);
-    }
+  const configOptions = { navigation, screenProps: screenProps || {} };
 
-    const routeConfig = routeConfigs[route.routeName];
+  outputConfig = applyConfig(
+    navigatorScreenConfig,
+    outputConfig,
+    configOptions
+  );
+  outputConfig = applyConfig(
+    componentScreenConfig,
+    outputConfig,
+    configOptions
+  );
+  outputConfig = applyConfig(routeScreenConfig, outputConfig, configOptions);
 
-    const routeScreenConfig = routeConfig.navigationOptions;
-    const componentScreenConfig = Component.navigationOptions;
+  validateScreenOptions(outputConfig, route);
 
-    const configOptions = { navigation, screenProps: screenProps || {} };
-
-    outputConfig = applyConfig(navigatorScreenConfig, outputConfig, configOptions);
-    outputConfig = applyConfig(componentScreenConfig, outputConfig, configOptions);
-    outputConfig = applyConfig(routeScreenConfig, outputConfig, configOptions);
-
-    validateScreenOptions(outputConfig, route);
-
-    return outputConfig;
-  };
+  return outputConfig;
+};

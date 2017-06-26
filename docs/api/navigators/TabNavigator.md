@@ -1,6 +1,6 @@
 # TabNavigator
 
-Used to easily set up a screen with several tabs with a TabRouter.
+Used to easily set up a screen with several tabs with a TabRouter. For a live example please see [our expo demo](https://exp.host/@react-navigation/NavigationPlayground).
 
 ```js
 class MyHomeScreen extends React.Component {
@@ -79,13 +79,13 @@ The route configs object is a mapping from route name to a route config, which t
 
 ### TabNavigatorConfig
 
-- `tabBarComponent` - component to use as the tab bar, e.g. `TabView.TabBarBottom`
-(this is the default on iOS), `TabView.TabBarTop`
+- `tabBarComponent` - component to use as the tab bar, e.g. `TabBarBottom`
+(this is the default on iOS), `TabBarTop`
 (this is the default on Android)
 - `tabBarPosition` - position of the tab bar, can be `'top'` or `'bottom'`
 - `swipeEnabled` - whether to allow swiping between tabs
 - `animationEnabled` - whether to animate when changing tabs
-- `lazyLoad` - whether to lazily render tabs as needed as opposed to rendering them upfront
+- `lazy` - whether to lazily render tabs as needed as opposed to rendering them upfront
 - `tabBarOptions` - configure the tab bar, see below.
 
 Several options get passed to the underlying router to modify navigation logic:
@@ -104,6 +104,7 @@ Several options get passed to the underlying router to modify navigation logic:
 - `showLabel` - whether to show label for tab, default is true
 - `style` - style object for the tab bar
 - `labelStyle` - style object for the tab label
+- `tabStyle` - style object for the tab
 
 Example:
 
@@ -142,6 +143,9 @@ tabBarOptions: {
   labelStyle: {
     fontSize: 12,
   },
+  tabStyle: {
+    width: 100,    
+  },
   style: {
     backgroundColor: 'blue',
   },
@@ -164,7 +168,7 @@ React Element or a function that given `{ focused: boolean, tintColor: string }`
 
 #### `tabBarLabel`
 
-Title string of a tab displayed in the tab bar. When undefined, scene `title` is used. To hide, see `tabBarOptions.showLabel` in the previous section.
+Title string of a tab displayed in the tab bar or React Element or a function that given `{ focused: boolean, tintColor: string }` returns a React.Element, to display in tab bar. When undefined, scene `title` is used. To hide, see `tabBarOptions.showLabel` in the previous section.
 
 ### Navigator Props
 

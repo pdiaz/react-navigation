@@ -1,11 +1,7 @@
 /* @flow */
 
 import React, { PureComponent } from 'react';
-import {
-  Platform,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import withCachedChildNavigation from '../../withCachedChildNavigation';
 
@@ -16,23 +12,26 @@ import type {
   NavigationRouter,
   NavigationDrawerScreenOptions,
   NavigationState,
+  NavigationStateRoute,
   Style,
 } from '../../TypeDefinition';
 
-import type {
-  DrawerScene,
-} from './DrawerView';
+import type { DrawerScene, DrawerItem } from './DrawerView';
 
-type Navigation = NavigationScreenProp<NavigationRoute, NavigationAction>;
+type Navigation = NavigationScreenProp<NavigationStateRoute, NavigationAction>;
 
 type Props = {
-  router: NavigationRouter<NavigationState, NavigationAction, NavigationDrawerScreenOptions>,
+  router: NavigationRouter<
+    NavigationState,
+    NavigationAction,
+    NavigationDrawerScreenOptions
+  >,
   navigation: Navigation,
   childNavigationProps: { [key: string]: Navigation },
   contentComponent: ReactClass<*>,
   contentOptions?: {},
   screenProps?: {},
-  style?: Style;
+  style?: Style,
 };
 
 /**
@@ -42,15 +41,17 @@ class DrawerSidebar extends PureComponent<void, Props, void> {
   props: Props;
 
   _getScreenOptions = (routeKey: string) => {
-    const DrawerScreen = this.props.router.getComponentForRouteName('DrawerClose');
+    const DrawerScreen = this.props.router.getComponentForRouteName(
+      'DrawerClose'
+    );
     return DrawerScreen.router.getScreenOptions(
       this.props.childNavigationProps[routeKey],
       this.props.screenProps
     );
-  }
+  };
 
   _getLabel = ({ focused, tintColor, route }: DrawerScene) => {
-    const {drawerLabel, title} = this._getScreenOptions(route.key);
+    const { drawerLabel, title } = this._getScreenOptions(route.key);
     if (drawerLabel) {
       return typeof drawerLabel === 'function'
         ? drawerLabel({ tintColor, focused })
@@ -65,7 +66,7 @@ class DrawerSidebar extends PureComponent<void, Props, void> {
   };
 
   _renderIcon = ({ focused, tintColor, route }: DrawerScene) => {
-    const {drawerIcon} = this._getScreenOptions(route.key);
+    const { drawerIcon } = this._getScreenOptions(route.key);
     if (drawerIcon) {
       return typeof drawerIcon === 'function'
         ? drawerIcon({ tintColor, focused })
@@ -74,15 +75,29 @@ class DrawerSidebar extends PureComponent<void, Props, void> {
     return null;
   };
 
+  _onItemPress = ({ route, focused }: DrawerItem) => {
+    this.props.navigation.navigate('DrawerClose');
+    if (!focused) {
+      this.props.navigation.navigate(route.routeName);
+    }
+  };
+
   render() {
     const ContentComponent = this.props.contentComponent;
+    const { state } = this.props.navigation;
     return (
       <View style={[styles.container, this.props.style]}>
         <ContentComponent
           {...this.props.contentOptions}
           navigation={this.props.navigation}
+          items={state.routes}
+          activeItemKey={
+            state.routes[state.index] && state.routes[state.index].key
+          }
+          screenProps={this.props.screenProps}
           getLabel={this._getLabel}
           renderIcon={this._renderIcon}
+          onItemPress={this._onItemPress}
           router={this.props.router}
         />
       </View>
